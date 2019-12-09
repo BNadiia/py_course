@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% block content %}
+   <div class="content-section content-section-main">
+   	<div class="media">
+        <img class="rounded-circle account-img" src="{{ image_file }}">
+        <div class="media-body">
+    			<h2 class="account-heading">{{ current_user.username }}</h2>
+    			<p class="text-secondary">{{ current_user.email }}</p>
+                <p class="text-secondary">{{ current_user.about_me }}</p>
+                <p class="text-secondary">Last seen on: {{ current_user.last_seen }}</p>
+        </div>
+   	</div>
+   	 <div class="content-section">
+         <hr><br>
+         <a class="btn btn-outline-dark" href="{{ url_for('accountupdate') }}">Update Account Information</a>
+         <br><br>
+     </div>
+
+
+
+
+    <div class="border-top pt-3">
+        <small class="text-muted">
+            Already Have An Account? <a class="ml-2" href="{{ url_for('login') }}">Sign In</a>
+        </small>
+    </div>
+   </div>
+{% endblock content %}
