@@ -1,6 +1,7 @@
 from flask import render_template, url_for, flash, redirect, request, abort
 from flasknews import app, db, bcrypt
-from flasknews.forms import RegistrationForm, LoginForm, UpdateAccountForm
+from flasknews.forms import RegistrationForm, LoginForm, UpdateAccountForm,\
+    AdminUserCreateForm, AdminUserUpdateForm, PostForm
 from flasknews.models import User, Post
 from flask_login import login_user, current_user, logout_user, login_required
 from datetime import datetime
@@ -8,6 +9,17 @@ import os
 import errno
 import secrets
 from PIL import Image
+from functools import wraps
+
+def restricted(role):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if not current_user.role == 'admin':
+                abort(403)
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
 
 
 def make_sure_path_exists(path):
@@ -31,6 +43,8 @@ def save_picture(form_picture):
     i.thumbnail(output_size)
     i.save(picture_path)
 
+    return os.path.join(current_user.username, picture_fn)
+
 
 @app.before_request
 def before_request():
@@ -42,7 +56,8 @@ def before_request():
 @app.route("/")
 @app.route("/home")
 def home():
-    return render_template('home.html')
+    posts = Post.query.all()
+    return render_template('home.html', posts=posts)
 
 
 @app.route("/register", methods=['GET', 'POST'])
@@ -121,12 +136,124 @@ def accountupdate():
 
 
 
-
 @app.route("/newspost")
 def newspost():
     return render_template('news-post.html')
 
 
 
+@app.route('/admin')
+@login_required
+@restricted(role="admin")
+def home_admin():
+    return render_template('admin-home.html')
 
 
+@app.route('/admin/users-list')
+@login_required
+@restricted(role="admin")
+def users_list_admin():
+    users = User.query.all()
+    return render_template('users-list-admin.html', users=users)
+
+
+@app.route('/admin/create-user', methods=['GET', 'POST'])
+@login_required
+@restricted(role="admin")
+def user_create_admin():
+    form = AdminUserCreateForm()
+    if form.validate_on_submit():
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        user = User(username=form.username.data, email=form.email.data, password=hashed_password)
+        user.role = form.role.data
+        db.session.add(user)
+        db.session.commit()
+        flash('User has been created!', 'success')
+        return redirect(url_for('users_list_admin'))
+    if form.errors:
+        flash(form.errors, 'danger')
+    return render_template('user-create-admin.html', title='Create User', form=form)
+
+
+
+@app.route('/admin/update-user/<id>', methods=['GET', 'POST'])
+@login_required
+@restricted(role="admin")
+def user_update_admin(id):
+    user = User.query.get(id)
+    form = AdminUserUpdateForm()
+    form.username.data = user.username
+    if form.validate_on_submit():
+        user.username = form.username.data
+        user.role = form.role.data
+        db.session.commit()
+        flash('User account has been updated!', 'success')
+        return redirect(url_for('users_list_admin'))
+    if form.errors:
+        flash(form.errors, 'danger')
+    return render_template('user-update-admin.html', title='Edit User', form=form)
+
+
+
+@app.route('/admin/delete-user/<id>')
+@login_required
+@restricted(role="admin")
+def user_delete_admin(id):
+    user = User.query.get(id)
+    db.session.delete(user)
+    db.session.commit()
+    flash('User account has been deleted!', 'success')
+    return redirect(url_for('users_list_admin'))
+
+
+
+
+@app.route("/post/new", methods=['GET', 'POST'])
+@login_required
+def new_post():
+    form = PostForm()
+    if form.validate_on_submit():
+        post = Post(title=form.title.data, content=form.content.data, author=current_user)
+        db.session.add(post)
+        db.session.commit()
+        flash('Your post has been created!', 'success')
+        return redirect(url_for('home'))
+    return render_template('create_post.html', title='New Post', form=form, legend='New Post')
+
+
+
+@app.route("/post/<int:post_id>")
+def post(post_id):
+    post = Post.query.get_or_404(post_id)
+    return render_template('post.html', title=post.title, post=post)
+
+
+@app.route("/post/<int:post_id>/update", methods=['GET', 'POST'])
+@login_required
+def update_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    if not(current_user.is_authenticated and (current_user.is_admin() or current_user.is_moderator())):
+        abort(403)
+    form = PostForm()
+    if form.validate_on_submit():
+        post.title = form.title.data
+        post.content = form.content.data
+        db.session.commit()
+        flash('Your post has been updated!', 'success')
+        return redirect(url_for('post', post_id=post.id))
+    elif request.method == 'GET':
+        form.title.data = post.title
+        form.content.data = post.content
+    return render_template('create_post.html', title='Update Post', form=form, legend='Update Post')
+
+
+@app.route("/post/<int:post_id>/delete", methods=['POST'])
+@login_required
+def delete_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    if not(current_user.is_authenticated and (current_user.is_admin() or current_user.is_moderator())):
+        abort(403)
+    db.session.delete(post)
+    db.session.commit()
+    flash('Your post has been deleted!', 'success')
+    return redirect(url_for('home'))

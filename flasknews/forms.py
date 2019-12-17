@@ -1,9 +1,11 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, SelectField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
-from flasknews.models import User
+from flasknews.models import User, CKTextAreaField
 from flask_login import current_user
 from flask_wtf.file import FileField, FileAllowed
+from flask_ckeditor import CKEditorField
+
 
 class RegistrationForm(FlaskForm):
 	username = StringField('Username', validators=[DataRequired(), Length(min=2,max=20)])
@@ -52,4 +54,36 @@ class UpdateAccountForm(FlaskForm):
             user = User.query.filter_by(email=email.data).first()
             if user:
                 raise ValidationError('That email is taken. Please choose a different one')
+
+
+
+
+class AdminUserCreateForm(FlaskForm):
+    username = StringField('Username', [DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', [DataRequired()])
+    role = SelectField(u'Role',  choices=[('admin', 'Admin'), ('moderator', 'Moderator'), ('user', 'User')])
+    submit = SubmitField('Create')
+
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user:
+            raise ValidationError('That username is taken. Choose a different one, please.')
+
+    def validate_email(self, field):
+        user = User.query.filter_by(email=field.data).first()
+        if user:
+            raise ValidationError('Email is already registered.')
+
+
+class AdminUserUpdateForm(FlaskForm):
+    username = StringField('Username', [DataRequired()])
+    role = SelectField(u'Role', choices=[('admin', 'Admin'), ('moderator', 'Moderator'), ('user', 'User')])
+    submit = SubmitField('Edit')
+
+
+class PostForm(FlaskForm):
+    title = StringField('Title', validators=[DataRequired()])
+    content = CKEditorField('Content', validators=[DataRequired()])
+    submit = SubmitField('Post')
 
