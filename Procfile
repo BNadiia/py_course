@@ -1,2 +1,1 @@
- 
-web: gunicorn run --log-file -
+web: gunicorn flasknews/app.app --log-file -
