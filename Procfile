@@ -1,1 +1,1 @@
-web: gunicorn run.__main__ --log-file -
+web: gunicorn --bind 0.0.0.0:8000 wsgi:app --log-level debug --log-file -
