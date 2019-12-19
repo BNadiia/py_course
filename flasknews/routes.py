@@ -1,8 +1,8 @@
-from flask import render_template, url_for, flash, redirect, request, abort
+from flask import render_template, url_for, flash, redirect, request, abort, jsonify
 from flasknews import app, db, bcrypt
 from flasknews.forms import RegistrationForm, LoginForm, UpdateAccountForm,\
-    AdminUserCreateForm, AdminUserUpdateForm, PostForm
-from flasknews.models import User, Post
+    AdminUserCreateForm, AdminUserUpdateForm, PostForm, AddCommentForm
+from flasknews.models import User, Post, Comment
 from flask_login import login_user, current_user, logout_user, login_required
 from datetime import datetime
 import os
@@ -28,6 +28,18 @@ def make_sure_path_exists(path):
     except OSError as exception:
         if exception.errno != errno.EEXIST:
             raise
+
+def save_post_picture(form_picture):
+    random_hex = secrets.token_hex(8)
+    f_name, f_ext = os.path.splitext(form_picture.filename)
+    picture_fn = random_hex + f_ext
+    picture_path = os.path.join(app.root_path, 'static/images/news', picture_fn)
+
+    output_size = (200, 200)
+    i = Image.open(form_picture)
+    i.thumbnail(output_size)
+    i.save(picture_path)
+    return picture_fn
 
 
 def save_picture(form_picture):
@@ -56,7 +68,8 @@ def before_request():
 @app.route("/")
 @app.route("/home")
 def home():
-    posts = Post.query.all()
+    page = request.args.get('page', 1, type=int)
+    posts = Post.query.order_by(Post.date_posted.desc()).paginate(page=page, per_page=5)
     return render_template('home.html', posts=posts)
 
 
@@ -135,13 +148,6 @@ def accountupdate():
     return render_template('_account-update.html', title='Account', image_file=image_file, form=form)
 
 
-
-@app.route("/newspost")
-def newspost():
-    return render_template('news-post.html')
-
-
-
 @app.route('/admin')
 @login_required
 @restricted(role="admin")
@@ -214,6 +220,9 @@ def new_post():
     form = PostForm()
     if form.validate_on_submit():
         post = Post(title=form.title.data, content=form.content.data, author=current_user)
+        if form.picture.data:
+            picture_file = save_post_picture(form.picture.data)
+            post.image_file = picture_file
         db.session.add(post)
         db.session.commit()
         flash('Your post has been created!', 'success')
@@ -225,7 +234,8 @@ def new_post():
 @app.route("/post/<int:post_id>")
 def post(post_id):
     post = Post.query.get_or_404(post_id)
-    return render_template('post.html', title=post.title, post=post)
+    comments = Comment.query.filter_by(post_id=post_id).all()
+    return render_template('post.html', title=post.title, post=post, comments=comments)
 
 
 @app.route("/post/<int:post_id>/update", methods=['GET', 'POST'])
@@ -238,12 +248,16 @@ def update_post(post_id):
     if form.validate_on_submit():
         post.title = form.title.data
         post.content = form.content.data
+        if form.picture.data:
+            picture_file = save_post_picture(form.picture.data)
+            post.image_file = picture_file
         db.session.commit()
         flash('Your post has been updated!', 'success')
         return redirect(url_for('post', post_id=post.id))
     elif request.method == 'GET':
         form.title.data = post.title
         form.content.data = post.content
+        form.picture.data = post.image_file
     return render_template('create_post.html', title='Update Post', form=form, legend='Update Post')
 
 
@@ -257,3 +271,80 @@ def delete_post(post_id):
     db.session.commit()
     flash('Your post has been deleted!', 'success')
     return redirect(url_for('home'))
+
+
+@app.route("/post/<int:post_id>/comment", methods=["GET", "POST"])
+@login_required
+def comment_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    form = AddCommentForm()
+    if form.validate_on_submit():
+        comment = Comment(body=form.body.data, post_id=post_id, author=current_user)
+        db.session.add(comment)
+        db.session.commit()
+        flash("Your comment has been added to the post", "success")
+        return redirect(url_for("post", post_id=post.id))
+    return render_template("comment_post.html", title="Comment Post", form=form)
+
+
+
+@app.route('/posts', methods=['GET'])
+def get_all_posts_api():
+    posts = Post.query.all()
+    output = []
+    for post in posts:
+        post_data = {}
+        post_data['id'] = post.id
+        post_data['title'] = post.title
+        post_data['content'] = post.content
+        post_data['date_posted'] = post.date_posted
+        post_data['user_id'] = post.user_id
+        post_data['image_file'] = post.image_file
+        output.append(post_data)
+    return jsonify({'posts': output})
+
+
+@app.route('/posts/<id>', methods=['GET'])
+def get_one_post_api(id):
+    post = Post.query.filter_by(id=id).first()
+    if not post:
+        return jsonify({'message': 'No post was found!'})
+    post_data = {}
+    post_data['id'] = post.id
+    post_data['title'] = post.title
+    post_data['content'] = post.content
+    post_data['date_posted'] = post.date_posted
+    post_data['user_id'] = post.user_id
+    post_data['image_file'] = post.image_file
+
+    return jsonify({'user': post_data})
+
+
+@app.route('/post', methods=['POST'])
+def create_post_api():
+    data = request.get_json()
+    new_post = Post(title=data['title'], content=data['content'], user_id = data['user_id'])
+    db.session.add(new_post)
+    db.session.commit()
+    return jsonify({'message': 'New post was created!'})
+
+
+@app.route('/posts/<id>', methods=['PUT'])
+def update_post_api(id):
+    data = request.get_json()
+    post = Post.query.filter_by(id=id).first()
+    if not post:
+        return jsonify({'message': 'No post was found!'})
+    post.title = data['title_change']
+    db.session.commit()
+    return jsonify({'message': 'The post has been updated!'})
+
+
+@app.route('/posts/<id>', methods=['DELETE'])
+def delete_post_api(id):
+    post = Post.query.filter_by(id=id).first()
+    if not post:
+        return jsonify({'message': 'No post was found!'})
+    db.session.delete(post)
+    db.session.commit()
+    return jsonify({'message': 'The post has been deleted!'})

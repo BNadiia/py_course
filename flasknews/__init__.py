@@ -32,4 +32,9 @@ manager.add_command('db', MigrateCommand)
 
 ckeditor = CKEditor(app)
 
+def blog_formating(content):
+    return (content[:75] + '...') if len(content) > 75 else content
+
+app.jinja_env.globals.update(blog_formating=blog_formating)
+
 from flasknews import routes

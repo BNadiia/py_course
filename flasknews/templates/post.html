@@ -1,8 +1,9 @@
 {% extends "layout.html" %}
 {% block content %}
     <article class="media content-section content-section-main">
-      <img class="rounded-circle article-img" src="static/images/news/news_default.png">
+      <img class="rounded-circle article-img" src="{{ url_for('static', filename='images/news/' + post.image_file)}}">
       <div class="media-body">
+
           <div class="article-metadata">
               <h2 class="article-title">{{ post.title }}</h2>
               <small class="text-muted">{{ post.date_posted.strftime('%Y-%m-%d') }}</small>
@@ -15,8 +16,32 @@
               {% endif %}
           </div>
           <p class="article-content">{{ post.content | safe }}</p>
+
       </div>
     </article>
+
+    <br><br>
+     <h4 style="margin-left: 12.5%"> COMMENTS</h4>
+    <a class="more-link" style="margin-left: 12.5%" href="{{url_for('comment_post', post_id=post.id)}}">Add comment</a>
+    <br>
+
+    {% for comment in comments %}
+        <article class="media content-section content-section-main">
+
+        <img class="rounded-circle article-img" src="{{ url_for('static', filename='images/profile_pics/' + comment.author.image_file) }}">
+          <div class="media-body">
+            <div class="article-metadata">
+
+              <a class="mr-2">{{ comment.author.username }}</a> <br>
+              <small class="text-muted">{{ comment.timestamp.strftime('%Y-%m-%d') }}</small>
+            </div>
+              <p class="article-content">{{ comment.body | safe }}</p>
+          </div>
+        </article>
+    {% endfor %}
+
+
+
    <!--Modal - bootstrap style demo -->
     <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">

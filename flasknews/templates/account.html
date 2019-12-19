@@ -15,9 +15,6 @@
          <a class="btn btn-outline-dark" href="{{ url_for('accountupdate') }}">Update Account Information</a>
          <br><br>
 
-         {% if current_user.is_authenticated and (current_user.is_admin() or current_user.is_moderator()) %}
-         <a class="btn btn-outline-dark" href="{{ url_for('new_post') }}">Add News</a>
-         {% endif %}
      </div>
 
 
