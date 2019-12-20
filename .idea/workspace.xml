@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="84a20f17-e5c3-4154-b336-126cd555262e" name="Default Changelist" comment="" />
+    <list default="true" id="84a20f17-e5c3-4154-b336-126cd555262e" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flasknews/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/flasknews/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flasknews/site.db" beforeDir="false" afterPath="$PROJECT_DIR$/flasknews/site.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flasknews/templates/_account-update.html" beforeDir="false" afterPath="$PROJECT_DIR$/flasknews/templates/_account-update.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flasknews/templates/admin-home.html" beforeDir="false" afterPath="$PROJECT_DIR$/flasknews/templates/admin-home.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flasknews/templates/create_post.html" beforeDir="false" afterPath="$PROJECT_DIR$/flasknews/templates/create_post.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flasknews/templates/layout.html" beforeDir="false" afterPath="$PROJECT_DIR$/flasknews/templates/layout.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flasknews/templates/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/flasknews/templates/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flasknews/templates/post.html" beforeDir="false" afterPath="$PROJECT_DIR$/flasknews/templates/post.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flasknews/templates/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/flasknews/templates/register.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flasknews/templates/user-create-admin.html" beforeDir="false" afterPath="$PROJECT_DIR$/flasknews/templates/user-create-admin.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flasknews/templates/users-list-admin.html" beforeDir="false" afterPath="$PROJECT_DIR$/flasknews/templates/users-list-admin.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run.py" beforeDir="false" afterPath="$PROJECT_DIR$/run.py" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

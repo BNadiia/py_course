@@ -21,10 +21,10 @@
           <td>{{ user.username }}</td>
           <td>{{ user.role }}</td>
           <td>
-            <a href="{{ url_for('user_update_admin', id=user.id) }}" class="btn btn-info btn-xs">Edit</a>
+            <a href="{{ url_for('user_update_admin', id=user.id) }}" class="btn btn btn-outline-success btn-xs">Edit</a>
           </td>
           <td>
-            <a class="btn btn-danger btn-xs" href={{ url_for('user_delete_admin', id=user.id) }}>Delete</a>
+            <a class="btn btn-outline-danger btn-xs" href={{ url_for('user_delete_admin', id=user.id) }}>Delete</a>
           </td>
         </tr>
       {% endfor %}

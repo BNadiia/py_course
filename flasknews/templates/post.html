@@ -23,7 +23,7 @@
     <br><br>
      <h4 style="margin-left: 12.5%"> COMMENTS</h4>
     <a class="more-link" style="margin-left: 12.5%" href="{{url_for('comment_post', post_id=post.id)}}">Add comment</a>
-    <br>
+    <br><br>
 
     {% for comment in comments %}
         <article class="media content-section content-section-main">
@@ -39,6 +39,7 @@
           </div>
         </article>
     {% endfor %}
+    <br><br>
 
 
 
